@@ -10,7 +10,7 @@ tf.set_random_seed(seed)
 import random
 random.seed(seed)
 
-import skimage.io 
+import skimage.io
 from skimage import img_as_ubyte
 
 import model as modellib
@@ -50,7 +50,7 @@ class BowlConfig(Config):
     DETECTION_MIN_CONFIDENCE = 0.9
 
     LEARNING_RATE = 0.001
-    
+
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1 # background + nuclei
 
@@ -74,13 +74,13 @@ MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 
 
 ## Change this with the path to the last epoch of train
-model_path = 
-model_path = os.path.join(MODEL_DIR,'YOUR_LOG_FOLDER','final.h5')
+model_path = os.path.join(ROOT_DIR, 'deepretina_final.h5')
+# model_path = os.path.join(MODEL_DIR,'YOUR_LOG_FOLDER','final.h5')
 
 
 ## change this with the correct paths for images and sample submission
-test_path = os.path.join(ROOT_DIR,'stage_2')
-sample_submission = pd.read_csv('stage2_sample_submission_final.csv')
+test_path = os.path.join(ROOT_DIR, 'datasets', 'stage2_test_final')
+sample_submission = pd.read_csv(os.path.join(ROOT_DIR, 'datasets', 'stage2_sample_submission_final.csv'))
 
 
 print("Loading weights from ", model_path)
@@ -90,7 +90,7 @@ import time
 start_time = time.time()
 
 # Recreate the model in inference mode
-model = modellib.MaskRCNN(mode="inference", 
+model = modellib.MaskRCNN(mode="inference",
                           config=inference_config,
                           model_dir=MODEL_DIR)
 model.load_weights(model_path, by_name=True)
