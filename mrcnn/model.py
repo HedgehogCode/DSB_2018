@@ -71,7 +71,7 @@ class BatchNorm(KL.BatchNormalization):
 
 def compute_backbone_shapes(config, image_shape):
     """Computes the width and height of each stage of the backbone network.
-    
+
     Returns:
         [N, (height, width)]. Where N is the number of stages
     """
@@ -809,7 +809,7 @@ class DetectionLayer(KE.Layer):
         m = parse_image_meta_graph(image_meta)
         image_shape = m['image_shape'][0]
         window = norm_boxes_graph(m['window'], image_shape[:2])
-        
+
         # Run detection refinement graph on each item in the batch
         detections_batch = utils.batch_slice(
             [rois, mrcnn_class, mrcnn_bbox, window],
@@ -1204,7 +1204,7 @@ def cropcenter(img_pre,xcrop,ycrop):
     img= img_pre[yoff:(yoff+ycrop),xoff:(xoff+xcrop)]
     return img
 
-    
+
 #########################################################################
 ## Rotate image around a centerpoint and return transformation matrix
 #########################################################################
@@ -1243,7 +1243,7 @@ def img_rot(img,msk,angle):
     #     img=np.expand_dims(img,2)
     return img,msk
 #########################################################################
-    
+
 def random_channel_shift(x, intensity, channel_axis=0):
     x = np.rollaxis(x, channel_axis, 0)
     min_x, max_x = np.min(x), np.max(x)
@@ -1257,7 +1257,7 @@ def random_channel_shift(x, intensity, channel_axis=0):
 
 
 
-    
+
 def load_image_gt(dataset, config, image_id, augment=False, augmentation=None,
                   use_mini_mask=False):
     """Load and return ground truth data for an image (image, mask, bounding boxes).
@@ -1330,7 +1330,7 @@ def load_image_gt(dataset, config, image_id, augment=False, augmentation=None,
             image = random_channel_shift(image,config.CHANNEL_SHIFT_RANGE,2)
 
 
-            
+
     # Augmentation
     # This requires the imgaug lib (https://github.com/aleju/imgaug)
     if augmentation:
@@ -2130,7 +2130,7 @@ class MaskRCNN():
                                      fc_layers_size=config.FPN_CLASSIF_FC_LAYERS_SIZE)
 
             # Detections
-            # output is [batch, num_detections, (y1, x1, y2, x2, class_id, score)] in 
+            # output is [batch, num_detections, (y1, x1, y2, x2, class_id, score)] in
             # normalized coordinates
             detections = DetectionLayer(config, name="mrcnn_detection")(
                 [rpn_rois, mrcnn_class, mrcnn_bbox, input_image_meta])
@@ -2191,7 +2191,7 @@ class MaskRCNN():
         exlude: list of layer names to excluce
         """
         import h5py
-        from keras.engine import topology
+        from keras.engine import saving
 
         if exclude:
             by_name = True
@@ -2213,9 +2213,9 @@ class MaskRCNN():
             layers = filter(lambda l: l.name not in exclude, layers)
 
         if by_name:
-            topology.load_weights_from_hdf5_group_by_name(f, layers)
+            saving.load_weights_from_hdf5_group_by_name(f, layers)
         else:
-            topology.load_weights_from_hdf5_group(f, layers)
+            saving.load_weights_from_hdf5_group(f, layers)
         if hasattr(f, 'close'):
             f.close()
 

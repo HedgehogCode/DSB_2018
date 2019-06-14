@@ -69,7 +69,7 @@ inference_config.display()
 #######################################################################################
 
 
-ROOT_DIR = os.getcwd()
+ROOT_DIR = os.path.join(os.getcwd(), '..')
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 
 

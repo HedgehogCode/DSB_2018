@@ -14,7 +14,8 @@ tf.set_random_seed(seed)
 import random
 random.seed(seed)
 
-import skimage.io 
+import scipy
+import skimage.io
 from skimage import img_as_ubyte
 import skimage.transform
 
@@ -27,16 +28,16 @@ import os
 import my_functions as f
 
 
-ROOT_DIR = os.getcwd()
+ROOT_DIR = os.path.join(os.getcwd(), '..')
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 
-## This is the path to your trained weights
-model_path = os.path.join(MODEL_DIR,'YOUR_LOG_PATH','final.h5') 
+## Change this with the path to the last epoch of train
+model_path = os.path.join(ROOT_DIR, 'deepretina_final.h5')
 
 ## modify these paths to where stage_2 images are downloaded
-sample_submission = pd.read_csv('stage2_sample_submission_final.csv')
-test_path ='stage_2' 
-    
+test_path = os.path.join(ROOT_DIR, 'datasets', 'stage2_test_final')
+sample_submission = pd.read_csv(os.path.join(ROOT_DIR, 'datasets', 'stage2_sample_submission_final.csv'))
+
 
 #######################################################################################
 ## SET UP CONFIGURATION
@@ -68,7 +69,7 @@ class BowlConfig(Config):
     DETECTION_MIN_CONFIDENCE = 0.9
 
     LEARNING_RATE = 0.001
-    
+
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1 # background + nuclei
 
@@ -113,7 +114,7 @@ def ensemble_image(aug_masks,image_id,iou_threshold = 0.6,remove_duplicate_thres
 
 
     ##############################################################################################
-    ##### MERGE TWO MASKS 
+    ##### MERGE TWO MASKS
     ##############################################################################################
     def merge_masks(mask_1,mask_2,iou_threshold = 0.6,remove_duplicate_threshold=0.7):
         """ Function to merge two masks
@@ -179,11 +180,11 @@ def ensemble_image(aug_masks,image_id,iou_threshold = 0.6,remove_duplicate_thres
     ##############################################################################################
 
 
-    
+
     ## Default empty values in case no mask found
     ImageId_i =  [image_id]
     EncodedPixels_i = ['']
-    
+
     mask_1 = aug_masks[0]
     for j in np.arange(1,len(aug_masks)):
         mask_2 = aug_masks[j]
@@ -198,7 +199,7 @@ def ensemble_image(aug_masks,image_id,iou_threshold = 0.6,remove_duplicate_thres
                 print('No Merge, keep mask_1 as is')
     if (type(mask_1)!= bool): # otherwise after merging we still have no particles detected
         ## Remove pixels that were not detected by at least threshold_rem TTA and empty masks
-        mask_1 = (mask_1>threshold_rem).astype('uint8') 
+        mask_1 = (mask_1>threshold_rem).astype('uint8')
         _idx = np.sum(mask_1, axis=(0, 1)) > 0
         mask_1 = mask_1[:, :, _idx]
 
@@ -214,7 +215,7 @@ def ensemble_image(aug_masks,image_id,iou_threshold = 0.6,remove_duplicate_thres
     df.to_csv(file_normal, index=False,mode='a', columns=['ImageId', 'EncodedPixels'],header= False)
 
     lock.release()
-    
+
     return 0
 ###################################################################################################
 
@@ -240,7 +241,7 @@ lock = multiprocessing.Lock()
 
 
 # Recreate the model in inference mode
-model = modellib.MaskRCNN(mode="inference", 
+model = modellib.MaskRCNN(mode="inference",
                           config=inference_config,
                           model_dir=MODEL_DIR)
 
@@ -310,7 +311,7 @@ for i in np.arange(n_images):
 
     original_image = original_image[:,:,:3]
 
-    bzResults = [] 
+    bzResults = []
     ## Predict for each augmentation
     for j in np.arange(n_augs): ## for each augmentation
         print('Model', j, 'Image',i, 'id ', image_id)
@@ -385,8 +386,8 @@ for i in np.arange(n_images):
             proc.join(timeout=0)
             if not proc.is_alive(): ## Proccess has finished, will remove it from list
                 del jobs[proc_i]
-            
-        if len(jobs)<MAXPROCCESES: 
+
+        if len(jobs)<MAXPROCCESES:
             wait_for_proccesses = False
         print("Alive Jobs",len(jobs))
 
@@ -394,6 +395,6 @@ for i in np.arange(n_images):
 ## Wait for all proccesses to finish
 for j in jobs:
     j.join()
-    
+
 end = time.time()
 
