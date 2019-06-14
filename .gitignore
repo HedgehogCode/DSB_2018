@@ -1,3 +1,4 @@
+*.log
 # Data files and directories common in repo root
 datasets/
 logs/
